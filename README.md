@@ -1,46 +1,45 @@
-# DingDong Delay — LV2 Guitar Delay Plugin
+# DingDong Delay
 
-Stereo ping-pong delay Raspberry Pi:lle ja PiPedalille.  
-Tap tempo MIDI-pedaalilla, shimmer, analoginen lämpö.
+Stereo ping-pong delay LV2 plugin for Raspberry Pi and PiPedal.
 
-## Ominaisuudet
+## Features
 
-| Parametri | Kuvaus |
-|-----------|--------|
-| **Delay Time** | 50–2000 ms, tap tempo MIDI:llä |
-| **Level** | Delay-signaalin voimakkuus |
-| **Mix** | Kuiva/märkä -suhde |
-| **Decay** | Feedback (kaiun sammuminen) |
-| **HP Freq** | High-pass feedback-ketjussa (poistaa mutaa) |
-| **LP Freq** | Low-pass feedback-ketjussa (pehmentää korkeat) |
-| **Shimmer Mix** | Shimmer-efektin määrä (x²-skaalaus) |
-| **Shimmer Pitch** | +Octave / +5th / −Octave |
-| **Stereo** | Mono tai Stereo/Ping-pong |
+- Stereo ping-pong or mono delay
+- MIDI tap tempo (Note On, CC ≥ 64, Program Change)
+- Shimmer effect with pitch options (+Octave, +5th, −Octave)
+- HP and LP filters in the feedback path
+- Analog warmth: soft saturation, wow/flutter, age filter
 
-**Analoginen sävy:** tanh-saturaatio, wow/flutter, age-suodatin  
-**MIDI tap:** Note On, CC ≥ 64, Program Change
+## Controls
 
-## Asennus
+| Parameter | Description |
+|-----------|-------------|
+| Level | Delay output volume |
+| Mix | Dry/wet balance |
+| Decay | Feedback amount |
+| HP Freq | High-pass filter cutoff (removes mud) |
+| LP Freq | Low-pass filter cutoff (softens highs) |
+| Delay Time | 50–2000 ms (overridden by tap tempo) |
+| Shimmer Mix | Shimmer amount |
+| Shimmer Pitch | +Octave / +5th / −Octave |
+| Stereo | Mono or Stereo/Ping-pong |
+
+## Installation
 
 ```bash
-git clone https://github.com/SINUN-TUNNUS/dingdong-delay.git
+git clone https://github.com/fe-su/dingdong-delay.git
 cd dingdong-delay
-chmod +x install.sh && ./install.sh
-```
-
-## Manuaalinen asennus
-
-```bash
 sudo apt install lv2-dev gcc make
-make deploy   # käännä + asenna + restart pipedald
+make deploy
 ```
 
-## Päivitys
+## Updating
 
 ```bash
+cd ~/dingdong-delay
 git pull && make deploy
 ```
 
-## Lisenssi
+## License
 
 MIT
