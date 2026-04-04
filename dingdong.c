@@ -230,7 +230,11 @@ static inline void channel_process(
     float sh = (shimmer > 0.001f) ? shimmer_read(ch, ra, rb) : 0.0f;
 
     *write = (feed_dry ? in : 0.0f) + sat * decay + sh * shimmer * decay;
-    *out   = (dry * (1.0f - mix) + sat * mix * level + sh * shimmer * level) * atten;
+
+    /* Parallel mix: dry passes through at full level, wet is added on top.
+       This way the plugin is transparent at mix=0 and adds delay on top
+       without reducing the dry signal volume at any mix setting.         */
+    *out   = (dry + (sat * level + sh * shimmer * level) * mix) * atten;
 }
 
 static void channel_init_allpass(Channel *ch)
@@ -436,8 +440,11 @@ static void run(LV2_Handle instance, uint32_t n_samples)
 
         float out_l, out_r, write_l, write_r;
 
+        /* Use in_l directly for mono source to preserve level.
+           Average only when true stereo signal is present.          */
+        float in_m = (in_r != 0.0f) ? (in_l + in_r) * 0.5f : in_l;
+
         if (stereo == 0) {
-            float in_m    = (in_l + in_r) * 0.5f;
             float delayed = delay_read(chL, d);
 
             channel_process(chL, in_m, delayed, 1,
@@ -455,7 +462,6 @@ static void run(LV2_Handle instance, uint32_t n_samples)
         } else {
             /* Ping-pong: L feeds dry signal, R receives only L's echo.
                Signal path: in → L → R → L → R ...                    */
-            float in_m = (in_l + in_r) * 0.5f;
 
             channel_process(chL, in_m, delay_read(chR, d), 1,
                 ra_l, rb_l, shimmer,
