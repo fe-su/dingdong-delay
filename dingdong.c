@@ -232,9 +232,10 @@ static inline void channel_process(
     *write = (feed_dry ? in : 0.0f) + sat * decay + sh * shimmer * decay;
 
     /* Parallel mix: dry passes through at full level, wet is added on top.
-       This way the plugin is transparent at mix=0 and adds delay on top
-       without reducing the dry signal volume at any mix setting.         */
-    *out   = (dry + (sat * level + sh * shimmer * level) * mix) * atten;
+       Level is applied to the entire output (dry + wet) as a master trim.
+       At level=0.5 the output is unity gain, above boosts, below cuts.  */
+    float wet = (sat + sh * shimmer) * mix;
+    *out = (dry + wet) * (level * 2.0f) * atten;
 }
 
 static void channel_init_allpass(Channel *ch)
