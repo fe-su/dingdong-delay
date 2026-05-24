@@ -109,6 +109,7 @@ typedef struct {
     uint64_t tap_times[MAX_TAPS];
     int      tap_count;
     uint64_t sample_pos;
+    float    tap_delay_raw;   /* tapped interval in samples, unscaled */
 
     float    lfo_phase[2];
     float    lfo_dp;
@@ -141,8 +142,10 @@ static void tap_register(DingDong *self, uint64_t t)
     float avg = (float)(total / pairs);
     float lo  = 0.10f * (float)self->sample_rate;
     float hi  = 2.00f * (float)self->sample_rate;
-    if (avg >= lo && avg <= hi)
-        self->target_delay = avg;
+    if (avg >= lo && avg <= hi) {
+        self->tap_delay_raw = avg;
+        self->target_delay  = avg;
+    }
 }
 
 static inline float grain_read(Channel *ch, float ratio, float ph[2], float dp)
@@ -334,6 +337,7 @@ static void activate(LV2_Handle instance)
 
     self->tap_count     = 0;
     self->sample_pos    = 0;
+    self->tap_delay_raw = 0.5f * (float)self->sample_rate;
     self->lfo_phase[0]  = 0.0f;
     self->lfo_phase[1]  = (float)M_PI * 0.5f;
     self->wow_phase     = 0.0f;
@@ -374,6 +378,12 @@ static void run(LV2_Handle instance, uint32_t n_samples)
 
     if (self->tap_count == 0)
         self->target_delay = (delay_ms / 1000.0f) * (float)self->sample_rate;
+    else if (stereo == 1)
+        /* Ping-pong: L→R→L cycle takes two delay lengths, so halve the
+           tapped interval so the full round trip matches the tapped tempo */
+        self->target_delay = self->tap_delay_raw * 0.5f;
+    else
+        self->target_delay = self->tap_delay_raw;
 
     float dmax = (float)self->ch[0].buf_size - 2.0f;
     float dmin = 0.002f * (float)self->sample_rate;
